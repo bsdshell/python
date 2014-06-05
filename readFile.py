@@ -32,8 +32,6 @@ for line in iter(f):
         if len(newstr) > 0  and newstr[len(newstr)-1] == '/':
             newstr = newstr[:len(newstr)-2]
             
-
-        
         column1     =   newstr[2:]
         column2     =   name
         column3     =   name 
