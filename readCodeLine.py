@@ -35,7 +35,6 @@ if len(arglist) == 3 and arglist[2] == "l":
 # Colour line from 1 to 10
 # Syntax: readCodeLine file.java 1 10
 if len(arglist) == 4 and arglist[2].isdigit() and arglist[3].isdigit():
-
     # etc. file.java
     fileName = arglist[1] 
     pair = os.path.splitext(fileName)
