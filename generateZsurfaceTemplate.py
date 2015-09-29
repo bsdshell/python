@@ -26,6 +26,11 @@ index1 = 0
 
 print "currDir="+currDir 
 
+
+def geneColorHtml(arr1, arr2):
+    print "code for generate highlighting html"
+
+
 # find the open marker and close marker
 # open marker = '//['
 # close marker = '//]'
@@ -43,14 +48,20 @@ def findColorCode(line, count, stack):
             print "(2)=", match.group(2)
             print "(3)=", match.group(3)
             print "(4)=", match.group(4)
-        stack.append(OPEN_MARKER)
+        # [0] = '//[' [1] = line #
+        arr = [OPEN_MARKER, count] 
+        stack.append(arr)
     elif closeMarker:
         print 'closeMarker:', line, " group:", closeMarker.group()
-        if stack[0] == OPEN_MARKER: # balance //[ and //]
+        arr = stack.pop()
+        if arr[0] == OPEN_MARKER: # balance //[ and //]
             print 'balance //[ and //]'
+            arr1 = arr[:]; arr2 = [CLOSE_MARKER, count];
+            print "arr1[0]=", arr1[0], "arr1[1]=", arr1[1]
+            print "arr2[0]=", arr2[0], "arr2[1]=", arr2[1]
+            geneColorHtml(arr1, arr2)
         else:
             print "Error: open and close markers are not balanced" 
-        stack = []
 
 def printmenu():
     print "[0] generateZsurfaceTemplate file.java                      [List file.java with line #]"
