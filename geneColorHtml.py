@@ -26,6 +26,15 @@ FILE_HASKELL = "haskell"
 FILE_SCALA    = "scala"
 FILE_XCODE    = "xcode"
 
+HTML_BEG      = "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en-GB\"> <head> <link rel=\"stylesheet\" type=\"text/css\" href=\"mycss/style.css\" /> </head><body>" 
+HTML_END      = "</body> </html>" 
+
+STAR           = r'\*.*\*'
+SQUARE_BRACKET = r'\[.*\]'
+CURE_BRACKET   = r'{.*}'
+CURE_ANGLE     = r'<.*>'
+DOUBLE_SLASH         = r'\/\/.*'
+
 arglist   = sys.argv;
 currDir   = os.getcwd()
 colorPath = "/Library/WebServer/Documents/zsurface/colorhtml/"
@@ -33,6 +42,20 @@ index0 = 0
 index1 = 0
 
 print "currDir="+currDir 
+
+def printList(mylist):
+    for li in mylist:  
+        print li
+
+def readFileLineByLine(sourceFile):
+    readHandler = open(sourceFile, "r")
+    flist = []
+    for line in iter(readHandler):
+        flist.append(line)
+
+    readHandler.close()
+
+    return flist
 
 def getMakerFromFileType(sourceFile):
     list1 = {};
@@ -55,12 +78,73 @@ def geneColorHtml(list1):
     for s in list1:
         print "list->", s, " ", list1[s] 
         
+def geneNoteHtml(inFile, outFile):
+    end = "<br>"
+    newline = "\n"
+    span_open = "<span class=\"tit\">"
+    span_close = "</span>"
+
+    span_open_ = "<span>"
+    span_close_ = "</span>"
+
+
+    flist = readFileLineByLine(inFile)
+    tmpWriteHandler = open(outFile, "w+")
+    tmpWriteHandler.write(HTML_BEG + end)
+    for line in flist:
+        nline = line = line.strip()
+        re0 = re.compile(STAR)
+        re1 = re.compile(SQUARE_BRACKET)
+        re2 = re.compile(CURE_BRACKET)
+        re3 = re.compile(CURE_BRACKET)
+        re4 = re.compile(CURE_ANGLE)
+        re5 = re.compile(DOUBLE_SLASH)
+
+        match0 = re0.search(line)
+        match1 = re1.search(line)
+        match2 = re2.search(line)
+        match3 = re3.search(line)
+        match4 = re4.search(line)
+        match5 = re5.search(line)
+
+        print "line=" + line
+        if len(line) > 0:
+            if match0:
+                if line[0] == '*' and line[-1] == '*':
+                    nline = span_open + line[1:len(line)-1] +span_close 
+            elif match1:
+                if line[0] == '[' and line[-1] == ']':
+                    nline = span_open + line[1:len(line)-1] + span_close
+            elif match2:
+                if line[0] == '{' and line[-1] == '}':
+                    nline = span_open + line[1:len(line)-1] + span_close
+            elif match3:
+                if line[0] == '<' and line[-1] == '>':
+                    nline = span_open + line[1:len(line)-1] + span_close
+            elif match4:
+                if line[0] == '<' and line[-1] == '>':
+                    nline = span_open + line[1:len(line)-1] + span_close
+            elif match5:
+                if line[0] == '/' and line[1] == '/':
+                    nline = span_open + line[2:len(line)-1] + span_close
+            else:
+                nline = span_open_  + line + span_close_ 
+
+        else:
+            nline = end 
+
+        tmpWriteHandler.write(nline + end + newline)
+
+        print nline 
+    tmpWriteHandler.write(HTML_END+ end)
+    tmpWriteHandler.close()
+
 def iterateFile(sourceFile):
     readHandler = open(sourceFile, "r")
     count = 0
     list1 = {}
-    begBool = False;
-    codeStr = ""
+    foundOpenMarker = False;
+    blockCode = ""
 
     mlist = getMakerFromFileType(sourceFile)
     openReg = mlist['OPEN_REG']
@@ -75,7 +159,8 @@ def iterateFile(sourceFile):
             print 'openMarker:', line, "group:", openMarker.group()
             match = regex.search(line)
             if match:
-                begBool = True
+                stack.append(OPEN_MARKER)
+                foundOpenMarker = True
                 print "(0)=", match.group(0)
                 print "(1)=", match.group(1)
                 fNameHtml = match.group(2)
@@ -87,42 +172,53 @@ def iterateFile(sourceFile):
                 list1 = {'OPEN_MARKER': OPEN_MARKER, 'file':fNameHtml, 'title':titleHtml,'begin':count}
 
         elif closeMarker:
-            begBool = False
+
+            openM = stack.pop()
+            foundOpenMarker = False
             list1['end'] = count
-            if len(codeStr) > 0:
+            if len(blockCode) > 0 and openM == OPEN_MARKER:
                     pair = os.path.splitext(sourceFile)
                     lexer = get_lexer_by_name("java", stripall=True)
 
-                    htmlFilePath = os.path.join(colorPath, "java", list1['file']);
+                    htmlFilePath = os.path.join(colorPath, FILE_JAVA, list1['file']);
                     if pair[1] == ".m":
                         lexer = get_lexer_by_name("objc", stripall=True)
-                        htmlFilePath = os.path.join(colorPath, "xcode", list1['file']);
+                        htmlFilePath = os.path.join(colorPath, FILE_XCODE, list1['file']);
                     elif pair[1] == ".hs":
                         lexer = get_lexer_by_name("haskell", stripall=True)
-                        htmlFilePath = os.path.join(colorPath, "haskell", list1['file']);
+                        htmlFilePath = os.path.join(colorPath, FILE_HASKELL, list1['file']);
                     elif pair[1] == ".cpp":
                         lexer = get_lexer_by_name("cpp", stripall=True)
-                        htmlFilePath = os.path.join(colorPath, "cpp", list1['file']);
-                    
+                        htmlFilePath = os.path.join(colorPath, FILE_CPP, list1['file']);
+                    elif pair[1] == ".scala":
+                        lexer = get_lexer_by_name("scala", stripall=True)
+                        htmlFilePath = os.path.join(colorPath, FILE_SCALA, list1['file']);
+
                     #formatter = HtmlFormatter(linenos=False, cssclass="source")
                     formatter = HtmlFormatter(linenos=False)
 
                     if os.path.exists(htmlFilePath):
-                        print "Error: htmlFilePath=", htmlFilePath, " exist"
-                        sys.exit()
+                        print "Error: htmlFilePath=[", htmlFilePath, "] exist\n"
+                        var = raw_input("Input 'rm' to remove the file\n")
+                        if( var == "rm"):
+                            os.remove(htmlFilePath)
+                            print "Remove file=[", htmlFilePath, "]\n"
+                        elif var == "": 
+                            print "Skip generate:", htmlFilePath, "\n"
                     else:
                         htmlFileHandle = open(htmlFilePath, "w+")
 
-                        highlight(codeStr, lexer, HtmlFormatter(), htmlFileHandle)
+                        highlight(blockCode, lexer, HtmlFormatter(), htmlFileHandle)
 
-                        # reset codeStr and list1
-                        codeStr = ""
+                        # reset blockCode and list1
                         list1 = {}
-        else:
-            if begBool:
-                codeStr += line 
-                print "codeStr->", codeStr
 
+                    blockCode = ""    
+        else:
+            #if foundOpenMarker:
+            if len(stack) == 1:
+                blockCode += line 
+                print "blockCode->", blockCode
 
         print "["+str(count)+"]"+line.rstrip("\n")
         count = count + 1
@@ -156,28 +252,14 @@ def generate(sourceFile, htmlFile, index0, index1):
     subprocess.call(["pygmentize", "-f", "html", "-o", htmlFile, tmpFileName])
     os.remove(tmpFileName)
 
-def generate2(list1, readHandler):
-    begIndex = list1['begin'];
-    endIndex = list1['end'];
-    fileName = list1['file'];
-    htmlHandler = open("/tmp/" + fileName, "w+")
-    count = 0
-    codeStr = ""
-    for line in iter(readHandler):
-        if (begIndex <= count) and (count <= endIndex) :
-            codeStr += line
-            print "[" + str(count) +"]" + line.rstrip("\n")
-        count = count + 1
 
-    highlight(codeStr, PythonLexer(), HtmlFormatter(), htmlHandler)
-    htmlHandler.close()
+# program start
 
 if len(arglist) == 1:
     printmenu()
 elif len(arglist) == 2:
     sourceFile = os.path.join(currDir, arglist[1]);
     iterateFile(sourceFile)
-
 
 # Syntax highlight from line 1 to 10 
 # Syntax: generateZsurfaceTemplate.py source.java 1 10
@@ -193,6 +275,15 @@ elif len(arglist) == 4 and arglist[2].isdigit() and arglist[3].isdigit():
     lineEnd= int(arglist[3])
 
     generate(sourceFile, htmlFile, lineStart, lineEnd)
+
+elif len(arglist) == 4 and arglist[1] == "-h":
+    printList(arglist)
+
+    inFile = arglist[2]
+    outFile = arglist[3]
+
+    geneNoteHtml(inFile, outFile)
+        
 
 # Colour line from 1 to 10
 # Syntax: readCodeLine source.java diffFile.html 1 10
@@ -221,7 +312,7 @@ elif len(arglist) == 6 and arglist[3] == "-d" and arglist[4].isdigit() and argli
         fullPath = os.path.join(colorPath, FILE_HASKELL)
     elif pair[1] == ".m":
         fullPath = os.path.join(colorPath, FILE_XCODE)
-    elif pair[1] == ".scl":
+    elif pair[1] == ".scala":
         fullPath = os.path.join(colorPath, FILE_SCALA)
 
     if os.path.exists(fullPath):
