@@ -40,7 +40,7 @@ if len(arglist) == 1:
             newPath = str(index) + ":" + split[1] 
             pathWriter.write(newPath) 
 
-            print "[" + split[0] + "]" + split[1]
+            print "[" + split[0] + "]" + split[1].rstrip()
             index = index + 1
 
         newPath = str(index) + ":" + currPath
@@ -104,12 +104,6 @@ elif len(arglist) == 3:
             pathWriter.write(str(index) + ":" + list[1])
             index = index + 1
 
-    elif arglist[1] == "cd" and arglist[2].isdigit():
-         dirIndex = int(arglist[2]) 
-         mypath = plist[dirIndex][1]
-         todir = mypath[:len(mypath)-1]
-         print todir
-         os.chdir(todir) 
 pathWriter.close()
 
 

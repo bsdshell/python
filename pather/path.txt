@@ -1,2 +1,4 @@
-0:/Users/cat/myfile/github/python/pather
-1:/Library/WebServer/Documents
+0:/Library/WebServer/Documents
+1:/Library/WebServer/Documents/zsurface/html
+2:/Library/WebServer/Documents/zsurface
+3:/Users/cat/myfile/github/python/pather
